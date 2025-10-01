@@ -1,18 +1,29 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const csrfProtection = require("./middlewares/csrfMiddleware");
+const { apiLimiter } = require("./middlewares/rateLimiter");
 const db = require("./models/db");
 require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT;
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(",");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
-const { apiLimiter } = require("./middlewares/rateLimiter");
+app.use(csrfProtection);
+app.get("/csrf-token", (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
+
 app.use("/api", apiLimiter); 
 app.use("/api/unit-usaha", require("./routes/unitUsahaRoutes"));
 app.use("/api/jenis-akun", require("./routes/jenisAkunRoutes"));
