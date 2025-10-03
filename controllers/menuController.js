@@ -33,6 +33,25 @@ exports.getAll = async (req, res) => {
   }
 };
 
+// ✅ Get Menu by Role
+exports.getMenuByRole = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT m.id, m.kode, m.nama, m.parent_id, m.urutan, m.path, 
+              rma.boleh_lihat, rma.boleh_tambah, rma.boleh_ubah, rma.boleh_hapus
+       FROM Menu m
+       JOIN RoleMenuAkses rma ON m.id = rma.menu_id
+       WHERE rma.role_id = ?
+       ORDER BY m.parent_id, m.urutan`,
+      [req.params.roleId]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // READ BY ID
 exports.getById = async (req, res) => {
   try {
